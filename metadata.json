@@ -1,0 +1,6 @@
+{
+  "name": "Orbit",
+  "description": "Other apps punish you when you fall behind. Orbit makes the restart small. An AI executive-function copilot for neurodivergent students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
