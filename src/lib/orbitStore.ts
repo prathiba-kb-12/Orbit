@@ -5,10 +5,17 @@ import type {
   Opportunity,
   OrbitState,
   OrbitTask,
+  SavedAccountPreview,
 } from '../types';
 
 export const STORAGE_KEY = 'orbit_copilot_state_v2';
 const LEGACY_STORAGE_KEY = 'orbit_copilot_state_v1';
+const SAVED_ACCOUNTS_KEY = 'orbit_saved_accounts_v1';
+const LEGACY_IMPORT_CHECKED_PREFIX = 'orbit_legacy_checked_v1_';
+
+export function getUserStorageKey(uid?: string): string {
+  return uid ? `${STORAGE_KEY}_${uid}` : STORAGE_KEY;
+}
 
 export function getTodayISO(): string {
   const now = new Date();
@@ -515,38 +522,49 @@ export function sanitizeAndDeduplicateState(state: OrbitState): OrbitState {
   };
 }
 
-export function loadOrbitState(): OrbitState {
+export function hydrateOrbitState(parsed: Partial<OrbitState>): OrbitState {
+  const base = getInitialState();
+  const rawGoals = Array.isArray(parsed.goals) ? parsed.goals : [];
+  const rawTasks = Array.isArray(parsed.tasks)
+    ? parsed.tasks.map((t, idx) => normalizeTask(t, idx))
+    : [];
+  const merged: OrbitState = {
+    ...base,
+    ...parsed,
+    goals: rawGoals,
+    assignments: Array.isArray(parsed.assignments) ? parsed.assignments : [],
+    opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : [],
+    tasks: rawTasks,
+    wins: Array.isArray(parsed.wins) ? parsed.wins : [],
+    preferences: {
+      ...base.preferences,
+      ...(parsed.preferences || {}),
+    },
+  };
+  const sanitized = sanitizeAndDeduplicateState(merged);
+  const normalized = ensureTwelveWeekGoals(sanitized.goals, sanitized.tasks);
+  return pruneOrphanedWins(
+    reconcileDailyState({
+      ...sanitized,
+      goals: normalized.goals,
+      tasks: normalized.tasks,
+    })
+  );
+}
+
+export function loadOrbitState(uid?: string): OrbitState {
   try {
+    if (uid) {
+      const rawUser = localStorage.getItem(getUserStorageKey(uid));
+      if (rawUser) {
+        return hydrateOrbitState(JSON.parse(rawUser) as Partial<OrbitState>);
+      }
+      return getInitialState();
+    }
+
     const rawV2 = localStorage.getItem(STORAGE_KEY);
     if (rawV2) {
-      const parsed = JSON.parse(rawV2) as Partial<OrbitState>;
-      const base = getInitialState();
-      const rawGoals = Array.isArray(parsed.goals) ? parsed.goals : [];
-      const rawTasks = Array.isArray(parsed.tasks)
-        ? parsed.tasks.map((t, idx) => normalizeTask(t, idx))
-        : [];
-      const merged: OrbitState = {
-        ...base,
-        ...parsed,
-        goals: rawGoals,
-        assignments: Array.isArray(parsed.assignments) ? parsed.assignments : [],
-        opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : [],
-        tasks: rawTasks,
-        wins: Array.isArray(parsed.wins) ? parsed.wins : [],
-        preferences: {
-          ...base.preferences,
-          ...(parsed.preferences || {}),
-        },
-      };
-      const sanitized = sanitizeAndDeduplicateState(merged);
-      const normalized = ensureTwelveWeekGoals(sanitized.goals, sanitized.tasks);
-      return pruneOrphanedWins(
-        reconcileDailyState({
-          ...sanitized,
-          goals: normalized.goals,
-          tasks: normalized.tasks,
-        })
-      );
+      return hydrateOrbitState(JSON.parse(rawV2) as Partial<OrbitState>);
     }
 
     const rawV1 = localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -566,22 +584,123 @@ export function loadOrbitState(): OrbitState {
   }
 }
 
-export function saveOrbitState(state: OrbitState): void {
+export function saveOrbitState(state: OrbitState, uid?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!uid) return;
+    localStorage.setItem(getUserStorageKey(uid), JSON.stringify(state));
   } catch {
     // Ignore storage quota issues gracefully
   }
 }
 
-export function clearOrbitState(): OrbitState {
+export function clearOrbitState(uid?: string): OrbitState {
   try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    if (uid) {
+      localStorage.removeItem(getUserStorageKey(uid));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    }
   } catch {
     // Ignore storage issues
   }
   return getInitialState();
+}
+
+export function loadLegacyLocalState(): OrbitState | null {
+  try {
+    const rawV2 = localStorage.getItem(STORAGE_KEY);
+    if (rawV2) {
+      const hydrated = hydrateOrbitState(JSON.parse(rawV2) as Partial<OrbitState>);
+      if (
+        hydrated.goals.length > 0 ||
+        hydrated.assignments.length > 0 ||
+        hydrated.opportunities.length > 0 ||
+        hydrated.tasks.length > 0 ||
+        hydrated.wins.length > 0
+      ) {
+        return hydrated;
+      }
+    }
+    const rawV1 = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (rawV1) {
+      const migrated = sanitizeAndDeduplicateState(migrateLegacyV1State(JSON.parse(rawV1)));
+      const normalized = ensureTwelveWeekGoals(migrated.goals, migrated.tasks);
+      const result = pruneOrphanedWins({
+        ...migrated,
+        goals: normalized.goals,
+        tasks: normalized.tasks,
+      });
+      if (
+        result.goals.length > 0 ||
+        result.assignments.length > 0 ||
+        result.opportunities.length > 0 ||
+        result.tasks.length > 0
+      ) {
+        return result;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function hasPendingLegacyImport(uid: string): boolean {
+  try {
+    if (!uid) return false;
+    if (localStorage.getItem(`${LEGACY_IMPORT_CHECKED_PREFIX}${uid}`) === '1') {
+      return false;
+    }
+    return loadLegacyLocalState() !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function markLegacyImportHandled(uid: string): void {
+  try {
+    if (uid) {
+      localStorage.setItem(`${LEGACY_IMPORT_CHECKED_PREFIX}${uid}`, '1');
+    }
+  } catch {
+    // Ignore
+  }
+}
+
+export function loadSavedAccounts(): SavedAccountPreview[] {
+  try {
+    const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((a) => a && typeof a.uid === 'string' && typeof a.email === 'string')
+      .slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+export function upsertSavedAccount(preview: SavedAccountPreview): SavedAccountPreview[] {
+  try {
+    const existing = loadSavedAccounts().filter((a) => a.uid !== preview.uid);
+    const next = [preview, ...existing].slice(0, 5);
+    localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
+    return next;
+  } catch {
+    return [];
+  }
+}
+
+export function removeSavedAccount(uid: string): SavedAccountPreview[] {
+  try {
+    const next = loadSavedAccounts().filter((a) => a.uid !== uid);
+    localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
+    return next;
+  } catch {
+    return [];
+  }
 }
 
 export function isDateInExamWeek(dateISO: string, assignments: Assignment[]): boolean {

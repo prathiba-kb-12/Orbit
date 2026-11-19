@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { User } from 'firebase/auth';
 import type {
   AppSection,
   Assignment,
@@ -11,6 +12,7 @@ import type {
   OpportunityCategory,
   OrbitState,
   OrbitTask,
+  UserProfile,
   WinNote,
 } from './types';
 import {
@@ -24,11 +26,20 @@ import {
   getTodayISO,
   getTodayQueue,
   getUnreviewedMissedTasks,
+  hasPendingLegacyImport,
+  loadLegacyLocalState,
   loadOrbitState,
+  markLegacyImportHandled,
   normalizeTask,
   rebalanceScheduleForEvent,
   saveOrbitState,
 } from './lib/orbitStore';
+import {
+  clearCloudWorkspaceItems,
+  fetchUserWorkspace,
+  syncOrbitStateDiff,
+} from './lib/orbitFirestore';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import {
   createGoalBreakdown,
   extractAssignmentPlan,
@@ -50,13 +61,29 @@ import { PlannerView } from './components/PlannerView';
 import { OpportunitiesView } from './components/OpportunitiesView';
 import { InsightsView } from './components/InsightsView';
 import { PrivacyView } from './components/PrivacyView';
+import { ProfileView } from './components/ProfileView';
+import { AuthView } from './components/AuthView';
 import { AssistantDrawer } from './components/AssistantDrawer';
 
-export default function App() {
-  const [state, setState] = useState<OrbitState>(() => loadOrbitState());
+function OrbitWorkspace({
+  user,
+  profile,
+  onSignOut,
+}: {
+  user: User;
+  profile: UserProfile | null;
+  onSignOut: () => Promise<void>;
+}) {
+  const [state, setState] = useState<OrbitState>(() => loadOrbitState(user.uid));
   const [activeSection, setActiveSection] = useState<AppSection>('today');
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
+
+  // Cloud sync & optional non-destructive legacy import state
+  const [cloudLoading, setCloudLoading] = useState(true);
+  const [pendingLegacyData, setPendingLegacyData] = useState<OrbitState | null>(null);
+  const cloudHydratedRef = useRef(false);
+  const lastSyncedRef = useRef<OrbitState | null>(null);
 
   // Loading & error states
   const [goalLoading, setGoalLoading] = useState(false);
@@ -72,9 +99,66 @@ export default function App() {
   const [latestWin, setLatestWin] = useState<WinNote | null>(null);
   const [replanMessage, setReplanMessage] = useState<string | null>(null);
 
+  const activeProfile: UserProfile = profile || {
+    uid: user.uid,
+    displayName: user.displayName || user.email?.split('@')[0] || 'Orbit Student',
+    email: user.email || '',
+    photoURL: user.photoURL || undefined,
+    emailVerified: user.emailVerified,
+    createdAt: user.metadata.creationTime || new Date().toISOString(),
+  };
+
   useEffect(() => {
-    saveOrbitState(state);
-  }, [state]);
+    let cancelled = false;
+    cloudHydratedRef.current = false;
+    setCloudLoading(true);
+
+    fetchUserWorkspace(user.uid)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.isEmptyInCloud && hasPendingLegacyImport(user.uid)) {
+          const legacy = loadLegacyLocalState();
+          if (legacy) {
+            setPendingLegacyData(legacy);
+          }
+        }
+        setState(res.state);
+        lastSyncedRef.current = res.state;
+        cloudHydratedRef.current = true;
+        saveOrbitState(res.state, user.uid);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Fall back gracefully to UID-scoped cache while keeping cloudHydrated false so empty cache never overwrites cloud
+      })
+      .finally(() => {
+        if (!cancelled) setCloudLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user.uid]);
+
+  useEffect(() => {
+    saveOrbitState(state, user.uid);
+    if (!cloudHydratedRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      const snapshot = state;
+      const prevSnapshot = lastSyncedRef.current;
+      lastSyncedRef.current = snapshot;
+      void syncOrbitStateDiff(user.uid, activeProfile, prevSnapshot, snapshot).catch((err) => {
+        setError(
+          err instanceof Error
+            ? 'Could not sync changes to cloud right now. Your progress is cached locally.'
+            : 'Sync hiccup.'
+        );
+      });
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [state, user.uid, activeProfile.displayName, activeProfile.email, activeProfile.photoURL, activeProfile.studyBio]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('reduce-motion', state.preferences.reduceMotion);
@@ -733,9 +817,57 @@ export default function App() {
           weather={weather}
           onOpenAssistant={() => setAssistantOpen(true)}
           missedCount={missedCount}
+          profile={activeProfile}
+          onSignOut={() => void onSignOut()}
         />
 
         <main className="relative z-10 lg:pl-64 pb-24 lg:pb-10">
+          {cloudLoading && (
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4">
+              <div className="rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-2.5 text-xs font-semibold text-slate-300">
+                Syncing {activeProfile.displayName}&apos;s Orbit workspace…
+              </div>
+            </div>
+          )}
+
+          {pendingLegacyData && (
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4">
+              <div className="aurora-glass-card rounded-2xl border border-amber-300/35 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-slate-200 leading-relaxed max-w-xl">
+                  <span className="font-extrabold text-amber-200">
+                    Found earlier tasks saved on this browser.
+                  </span>{' '}
+                  Import your {pendingLegacyData.goals.length} goal(s),{' '}
+                  {pendingLegacyData.assignments.length} work item(s), and{' '}
+                  {pendingLegacyData.tasks.length} task(s) into your private account?
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markLegacyImportHandled(user.uid);
+                      setState(pendingLegacyData);
+                      setPendingLegacyData(null);
+                    }}
+                    className="min-h-[38px] rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3.5"
+                  >
+                    Import Into My Account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markLegacyImportHandled(user.uid);
+                      setPendingLegacyData(null);
+                    }}
+                    className="min-h-[38px] rounded-xl bg-white/10 text-slate-200 font-bold text-xs px-3.5"
+                  >
+                    Start Fresh
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'today' && (
             <TodayView
               state={state}
@@ -1092,6 +1224,8 @@ export default function App() {
           {activeSection === 'privacy' && (
             <PrivacyView
               state={state}
+              userEmail={activeProfile.email}
+              onOpenProfile={() => setActiveSection('profile')}
               onToggleReduceMotion={(enabled) =>
                 setState((prev) => ({
                   ...prev,
@@ -1111,7 +1245,10 @@ export default function App() {
                 }))
               }
               onDeleteAllData={() => {
-                setState(clearOrbitState());
+                const fresh = clearOrbitState(user.uid);
+                lastSyncedRef.current = fresh;
+                setState(fresh);
+                void clearCloudWorkspaceItems(user.uid).catch(() => {});
                 setAssistantMessages([]);
                 setLatestWin(null);
                 setReplanMessage(null);
@@ -1120,6 +1257,8 @@ export default function App() {
               }}
             />
           )}
+
+          {activeSection === 'profile' && <ProfileView />}
         </main>
 
         <AssistantDrawer
@@ -1139,6 +1278,50 @@ export default function App() {
           }
         />
       </div>
+    </ErrorBoundary>
+  );
+}
+
+function OrbitRoot() {
+  const { user, profile, authLoading, signOutAccount } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="relative min-h-dvh text-slate-100 flex items-center justify-center">
+        <CosmosBackdrop weather="okay" reduceMotion={false} />
+        <div className="relative z-10 aurora-glass-card rounded-[28px] px-8 py-6 text-center space-y-2">
+          <div className="w-8 h-8 rounded-full border-2 border-amber-300 border-t-transparent animate-spin mx-auto" />
+          <p className="text-sm font-bold text-slate-200">Restoring your Orbit session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="relative min-h-dvh text-slate-100">
+        <CosmosBackdrop weather="okay" reduceMotion={false} />
+        <AuthView />
+      </div>
+    );
+  }
+
+  return (
+    <OrbitWorkspace
+      key={user.uid}
+      user={user}
+      profile={profile}
+      onSignOut={signOutAccount}
+    />
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <OrbitRoot />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

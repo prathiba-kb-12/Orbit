@@ -1,9 +1,13 @@
 import type { ApiRequest, ApiResponse } from './_lib/gemini';
+import { requireAuthenticatedUser } from './_lib/auth';
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const caller = await requireAuthenticatedUser(req, res);
+  if (!caller) return;
 
   const rawUsername = req.query?.username;
   const username = (Array.isArray(rawUsername) ? rawUsername[0] : rawUsername || '').trim();

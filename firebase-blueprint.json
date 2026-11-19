@@ -1,0 +1,164 @@
+{
+  "entities": {
+    "UserWorkspace": {
+      "title": "UserWorkspace",
+      "description": "Private user account profile, preferences, and summary metadata stored strictly per authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 200 },
+        "photoURL": { "type": "string", "maxLength": 65000 },
+        "studyBio": { "type": "string", "maxLength": 300 },
+        "lastActiveDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "preferences": { "type": "object" },
+        "patternInsight": { "type": "object" },
+        "githubActivity": { "type": "object" },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email", "lastActiveDate", "preferences", "createdAt", "syncedAt"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Long-term 3-month goal with 3 monthly milestones and 12 weekly targets.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 60 },
+        "deadline": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "status": { "type": "string", "enum": ["active", "paused", "archived"] },
+        "syllabus": { "type": "string", "maxLength": 12000 },
+        "milestones": { "type": "array" },
+        "weeklyTargets": { "type": "array" },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "id", "title", "category", "deadline", "status", "milestones", "weeklyTargets", "createdAt", "syncedAt"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Academic or work assignment/exam item with due date and checklist.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "subject": { "type": "string", "maxLength": 120 },
+        "kind": { "type": "string", "enum": ["assignment", "exam"] },
+        "dueDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "requirements": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 6000 },
+        "status": { "type": "string", "enum": ["upcoming", "in_progress", "completed"] },
+        "sourceFileName": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "id", "title", "subject", "kind", "dueDate", "requirements", "notes", "status", "createdAt", "syncedAt"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "External opportunity such as internship, hackathon, course, scholarship, or competition.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "organization": { "type": "string", "maxLength": 140 },
+        "category": { "type": "string", "enum": ["Internship", "Hackathon", "Course", "Scholarship", "Competition"] },
+        "applicationDeadline": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "eventDate": { "type": "string", "maxLength": 20 },
+        "registrationLink": { "type": "string", "maxLength": 1000 },
+        "eligibility": { "type": "string", "maxLength": 1000 },
+        "requirements": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["Interested", "To Apply", "Applied", "Registered", "Completed", "Expired"] },
+        "reminderDaysBefore": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "id", "title", "organization", "category", "applicationDeadline", "status", "reminderDaysBefore", "createdAt", "syncedAt"]
+    },
+    "OrbitTask": {
+      "title": "OrbitTask",
+      "description": "Actionable task scoped to Today, Goals, Work/Assignments, Opportunities, or Planner.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "category": { "type": "string", "maxLength": 60 },
+        "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+        "estimatedMinutes": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "missed", "skipped"] },
+        "scheduledDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "sourceType": { "type": "string", "enum": ["goal", "assignment", "opportunity", "custom"] },
+        "sourceId": { "type": "string", "maxLength": 128 },
+        "milestoneIndex": { "type": "number" },
+        "weeklyTargetId": { "type": "string", "maxLength": 128 },
+        "orderIndex": { "type": "number" },
+        "firstAction": { "type": "string", "maxLength": 400 },
+        "microSteps": { "type": "array" },
+        "completedAt": { "type": "string", "maxLength": 40 },
+        "skippedAt": { "type": "string", "maxLength": 40 },
+        "postponeCount": { "type": "number" },
+        "blockerReason": { "type": "string", "maxLength": 40 },
+        "replanReviewed": { "type": "boolean" },
+        "weatherWhenCompleted": { "type": "string", "maxLength": 30 },
+        "examReduced": { "type": "boolean" },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "id", "title", "description", "category", "priority", "estimatedMinutes", "status", "scheduledDate", "sourceType", "orderIndex", "firstAction", "syncedAt"]
+    },
+    "WinNote": {
+      "title": "WinNote",
+      "description": "Completed task celebration note displayed in My Wins.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "taskId": { "type": "string", "maxLength": 128 },
+        "taskTitle": { "type": "string", "maxLength": 240 },
+        "note": { "type": "string", "maxLength": 600 },
+        "sourceType": { "type": "string", "maxLength": 40 },
+        "sourceId": { "type": "string", "maxLength": 128 },
+        "sourceTitle": { "type": "string", "maxLength": 200 },
+        "planetName": { "type": "string", "maxLength": 40 },
+        "nextPlanetName": { "type": "string", "maxLength": 40 },
+        "milestoneCompleted": { "type": "boolean" },
+        "minutes": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "syncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "id", "taskId", "taskTitle", "note", "minutes", "createdAt", "syncedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserWorkspace" },
+      "description": "Private user account profile, preferences, and workspace metadata."
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/Goal" },
+      "description": "User's long-term 3-month goals."
+    },
+    "/users/{userId}/assignments/{assignmentId}": {
+      "schema": { "$ref": "#/entities/Assignment" },
+      "description": "User's Work assignments and exams."
+    },
+    "/users/{userId}/opportunities/{opportunityId}": {
+      "schema": { "$ref": "#/entities/Opportunity" },
+      "description": "User's tracked opportunities and deadlines."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/OrbitTask" },
+      "description": "User's actionable tasks across all Orbit sections."
+    },
+    "/users/{userId}/wins/{winId}": {
+      "schema": { "$ref": "#/entities/WinNote" },
+      "description": "User's completed task win notes."
+    }
+  }
+}

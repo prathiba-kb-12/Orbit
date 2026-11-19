@@ -12,11 +12,27 @@ import type {
   OrbitTask,
 } from '../types';
 import type { InsightsMetrics } from './orbitStore';
+import { auth } from './firebase';
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Please sign in to your Orbit account first.');
+  }
+  const token = await user.getIdToken();
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const authHeaders = await getAuthHeaders();
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+    },
     body: JSON.stringify(body),
   });
 
@@ -119,7 +135,7 @@ export async function unstickTask(params: {
   brainWeather: BrainWeather;
   syllabus?: string;
 }): Promise<{ firstPhysicalAction: string; microSteps: string[] }> {
-  return postJson('/api/unstick', params);
+  return postJson('/api/replan?mode=unstick', { ...params, mode: 'unstick' });
 }
 
 export async function replanMissedTasks(params: {
@@ -147,11 +163,14 @@ export async function generateWinNote(params: {
   targetSteps: number;
   milestoneCompleted?: boolean;
 }): Promise<{ note: string }> {
-  return postJson('/api/win-note', params);
+  return postJson('/api/insights?mode=win-note', { ...params, mode: 'win-note' });
 }
 
 export async function fetchGitHubActivity(username: string): Promise<GitHubActivity> {
-  const res = await fetch(`/api/github?username=${encodeURIComponent(username.trim())}`);
+  const authHeaders = await getAuthHeaders();
+  const res = await fetch(`/api/github?username=${encodeURIComponent(username.trim())}`, {
+    headers: authHeaders,
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data?.error || 'Could not look up that GitHub handle right now.');

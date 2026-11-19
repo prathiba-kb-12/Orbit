@@ -1,0 +1,289 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidISODate(val) {
+      return val is string && val.size() == 10 && val.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isValidOptionalBool(data, key) {
+      return !(key in data) || data[key] is bool;
+    }
+
+    function isValidOptionalNumber(data, key) {
+      return !(key in data) || (data[key] is int || data[key] is float);
+    }
+
+    function isValidUserWorkspace(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'lastActiveDate', 'preferences', 'createdAt', 'syncedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'displayName', 'email', 'photoURL', 'studyBio',
+          'lastActiveDate', 'preferences', 'patternInsight', 'githubActivity',
+          'createdAt', 'syncedAt'
+        ]) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        isValidOptionalString(data, 'photoURL', 65000) &&
+        isValidOptionalString(data, 'studyBio', 300) &&
+        isValidISODate(data.lastActiveDate) &&
+        data.preferences is map &&
+        data.preferences.keys().hasAll(['brainWeather', 'availableMinutesToday', 'reduceMotion', 'onePasteCaptureEnabled', 'voiceAssistantEnabled', 'githubUsername']) &&
+        data.preferences.keys().hasOnly(['brainWeather', 'availableMinutesToday', 'reduceMotion', 'onePasteCaptureEnabled', 'voiceAssistantEnabled', 'githubUsername']) &&
+        data.preferences.brainWeather in ['fried', 'okay', 'lockedIn'] &&
+        (data.preferences.availableMinutesToday is int || data.preferences.availableMinutesToday is float) &&
+        data.preferences.availableMinutesToday >= 5 && data.preferences.availableMinutesToday <= 240 &&
+        data.preferences.reduceMotion is bool &&
+        data.preferences.onePasteCaptureEnabled is bool &&
+        data.preferences.voiceAssistantEnabled is bool &&
+        data.preferences.githubUsername is string && data.preferences.githubUsername.size() <= 60 &&
+        (!('patternInsight' in data) || data.patternInsight == null || (data.patternInsight is map && data.patternInsight.keys().hasOnly(['sentence', 'generatedAt']))) &&
+        (!('githubActivity' in data) || data.githubActivity == null || (data.githubActivity is map && data.githubActivity.keys().hasOnly(['username', 'daysSinceLastCommit', 'lastCommitDate', 'languages', 'recentRepoCount', 'fetchedAt']))) &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.syncedAt == request.time;
+    }
+
+    function isValidGoal(data, userId, goalId) {
+      return data.keys().hasAll(['uid', 'id', 'title', 'category', 'deadline', 'status', 'milestones', 'weeklyTargets', 'createdAt', 'syncedAt']) &&
+        data.keys().hasOnly(['uid', 'id', 'title', 'category', 'deadline', 'status', 'syllabus', 'milestones', 'weeklyTargets', 'createdAt', 'syncedAt']) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.id == goalId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+        isValidISODate(data.deadline) &&
+        data.status in ['active', 'paused', 'archived'] &&
+        isValidOptionalString(data, 'syllabus', 12000) &&
+        data.milestones is list && data.milestones.size() >= 1 && data.milestones.size() <= 3 &&
+        data.milestones[0] is map &&
+        data.weeklyTargets is list && data.weeklyTargets.size() >= 1 && data.weeklyTargets.size() <= 16 &&
+        data.weeklyTargets[0] is map &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.syncedAt == request.time;
+    }
+
+    function isValidAssignment(data, userId, assignmentId) {
+      return data.keys().hasAll(['uid', 'id', 'title', 'subject', 'kind', 'dueDate', 'requirements', 'notes', 'status', 'createdAt', 'syncedAt']) &&
+        data.keys().hasOnly(['uid', 'id', 'title', 'subject', 'kind', 'dueDate', 'requirements', 'notes', 'status', 'sourceFileName', 'createdAt', 'syncedAt']) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.id == assignmentId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.subject is string && data.subject.size() <= 120 &&
+        data.kind in ['assignment', 'exam'] &&
+        isValidISODate(data.dueDate) &&
+        data.requirements is list && data.requirements.size() <= 30 &&
+        (data.requirements.size() == 0 || data.requirements[0] is string) &&
+        data.notes is string && data.notes.size() <= 6000 &&
+        data.status in ['upcoming', 'in_progress', 'completed'] &&
+        isValidOptionalString(data, 'sourceFileName', 200) &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.syncedAt == request.time;
+    }
+
+    function isValidOpportunity(data, userId, oppId) {
+      return data.keys().hasAll(['uid', 'id', 'title', 'organization', 'category', 'applicationDeadline', 'status', 'reminderDaysBefore', 'createdAt', 'syncedAt']) &&
+        data.keys().hasOnly(['uid', 'id', 'title', 'organization', 'category', 'applicationDeadline', 'eventDate', 'registrationLink', 'eligibility', 'requirements', 'status', 'reminderDaysBefore', 'createdAt', 'syncedAt']) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.id == oppId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.organization is string && data.organization.size() <= 140 &&
+        data.category in ['Internship', 'Hackathon', 'Course', 'Scholarship', 'Competition'] &&
+        isValidISODate(data.applicationDeadline) &&
+        isValidOptionalString(data, 'eventDate', 20) &&
+        isValidOptionalString(data, 'registrationLink', 1000) &&
+        isValidOptionalString(data, 'eligibility', 1000) &&
+        isValidOptionalString(data, 'requirements', 2000) &&
+        data.status in ['Interested', 'To Apply', 'Applied', 'Registered', 'Completed', 'Expired'] &&
+        (data.reminderDaysBefore is int || data.reminderDaysBefore is float) &&
+        data.reminderDaysBefore >= 0 && data.reminderDaysBefore <= 60 &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.syncedAt == request.time;
+    }
+
+    function isValidOrbitTask(data, userId, taskId) {
+      return data.keys().hasAll(['uid', 'id', 'title', 'description', 'category', 'priority', 'estimatedMinutes', 'status', 'scheduledDate', 'sourceType', 'orderIndex', 'firstAction', 'syncedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'id', 'title', 'description', 'category', 'priority', 'estimatedMinutes',
+          'status', 'scheduledDate', 'sourceType', 'sourceId', 'milestoneIndex', 'weeklyTargetId',
+          'orderIndex', 'firstAction', 'microSteps', 'completedAt', 'skippedAt',
+          'postponeCount', 'blockerReason', 'replanReviewed', 'weatherWhenCompleted',
+          'examReduced', 'syncedAt'
+        ]) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.id == taskId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 240 &&
+        data.description is string && data.description.size() <= 2000 &&
+        data.category is string && data.category.size() <= 60 &&
+        data.priority in ['high', 'medium', 'low'] &&
+        (data.estimatedMinutes is int || data.estimatedMinutes is float) &&
+        data.estimatedMinutes >= 1 && data.estimatedMinutes <= 180 &&
+        data.status in ['pending', 'in_progress', 'completed', 'missed', 'skipped'] &&
+        isValidISODate(data.scheduledDate) &&
+        data.sourceType in ['goal', 'assignment', 'opportunity', 'custom'] &&
+        isValidOptionalString(data, 'sourceId', 128) &&
+        isValidOptionalNumber(data, 'milestoneIndex') &&
+        isValidOptionalString(data, 'weeklyTargetId', 128) &&
+        (data.orderIndex is int || data.orderIndex is float) &&
+        data.firstAction is string && data.firstAction.size() <= 400 &&
+        (!('microSteps' in data) || (data.microSteps is list && data.microSteps.size() <= 10 && (data.microSteps.size() == 0 || data.microSteps[0] is string))) &&
+        isValidOptionalString(data, 'completedAt', 40) &&
+        isValidOptionalString(data, 'skippedAt', 40) &&
+        isValidOptionalNumber(data, 'postponeCount') &&
+        isValidOptionalString(data, 'blockerReason', 40) &&
+        isValidOptionalBool(data, 'replanReviewed') &&
+        isValidOptionalString(data, 'weatherWhenCompleted', 30) &&
+        isValidOptionalBool(data, 'examReduced') &&
+        data.syncedAt == request.time;
+    }
+
+    function isValidWinNote(data, userId, winId) {
+      return data.keys().hasAll(['uid', 'id', 'taskId', 'taskTitle', 'note', 'minutes', 'createdAt', 'syncedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'id', 'taskId', 'taskTitle', 'note', 'sourceType', 'sourceId',
+          'sourceTitle', 'planetName', 'nextPlanetName', 'milestoneCompleted',
+          'minutes', 'createdAt', 'syncedAt'
+        ]) &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.id == winId &&
+        data.taskId is string && data.taskId.size() >= 1 && data.taskId.size() <= 128 &&
+        data.taskTitle is string && data.taskTitle.size() >= 1 && data.taskTitle.size() <= 240 &&
+        data.note is string && data.note.size() <= 600 &&
+        isValidOptionalString(data, 'sourceType', 40) &&
+        isValidOptionalString(data, 'sourceId', 128) &&
+        isValidOptionalString(data, 'sourceTitle', 200) &&
+        isValidOptionalString(data, 'planetName', 40) &&
+        isValidOptionalString(data, 'nextPlanetName', 40) &&
+        isValidOptionalBool(data, 'milestoneCompleted') &&
+        (data.minutes is int || data.minutes is float) && data.minutes >= 0 && data.minutes <= 480 &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.syncedAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUserWorkspace(incoming(), userId);
+      allow update: if isValidId(userId) && isOwner(userId) &&
+        isValidUserWorkspace(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'email', 'photoURL', 'studyBio',
+          'lastActiveDate', 'preferences', 'patternInsight', 'githubActivity', 'syncedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      match /goals/{goalId} {
+        allow get: if isValidId(userId) && isValidId(goalId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(goalId) && isOwner(userId) && isValidGoal(incoming(), userId, goalId);
+        allow update: if isValidId(userId) && isValidId(goalId) && isOwner(userId) &&
+          isValidGoal(incoming(), userId, goalId) &&
+          incoming().uid == existing().uid &&
+          incoming().id == existing().id &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'deadline', 'status', 'syllabus', 'milestones', 'weeklyTargets', 'syncedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(goalId) && isOwner(userId);
+      }
+
+      match /assignments/{assignmentId} {
+        allow get: if isValidId(userId) && isValidId(assignmentId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(assignmentId) && isOwner(userId) && isValidAssignment(incoming(), userId, assignmentId);
+        allow update: if isValidId(userId) && isValidId(assignmentId) && isOwner(userId) &&
+          isValidAssignment(incoming(), userId, assignmentId) &&
+          incoming().uid == existing().uid &&
+          incoming().id == existing().id &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'subject', 'kind', 'dueDate', 'requirements', 'notes', 'status', 'sourceFileName', 'syncedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(assignmentId) && isOwner(userId);
+      }
+
+      match /opportunities/{opportunityId} {
+        allow get: if isValidId(userId) && isValidId(opportunityId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(opportunityId) && isOwner(userId) && isValidOpportunity(incoming(), userId, opportunityId);
+        allow update: if isValidId(userId) && isValidId(opportunityId) && isOwner(userId) &&
+          isValidOpportunity(incoming(), userId, opportunityId) &&
+          incoming().uid == existing().uid &&
+          incoming().id == existing().id &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'organization', 'category', 'applicationDeadline', 'eventDate',
+            'registrationLink', 'eligibility', 'requirements', 'status', 'reminderDaysBefore', 'syncedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(opportunityId) && isOwner(userId);
+      }
+
+      match /tasks/{taskId} {
+        allow get: if isValidId(userId) && isValidId(taskId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(taskId) && isOwner(userId) && isValidOrbitTask(incoming(), userId, taskId);
+        allow update: if isValidId(userId) && isValidId(taskId) && isOwner(userId) &&
+          isValidOrbitTask(incoming(), userId, taskId) &&
+          incoming().uid == existing().uid &&
+          incoming().id == existing().id &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'description', 'category', 'priority', 'estimatedMinutes',
+            'status', 'scheduledDate', 'sourceType', 'sourceId', 'milestoneIndex', 'weeklyTargetId',
+            'orderIndex', 'firstAction', 'microSteps', 'completedAt', 'skippedAt',
+            'postponeCount', 'blockerReason', 'replanReviewed', 'weatherWhenCompleted',
+            'examReduced', 'syncedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(taskId) && isOwner(userId);
+      }
+
+      match /wins/{winId} {
+        allow get: if isValidId(userId) && isValidId(winId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(winId) && isOwner(userId) && isValidWinNote(incoming(), userId, winId);
+        allow update: if isValidId(userId) && isValidId(winId) && isOwner(userId) &&
+          isValidWinNote(incoming(), userId, winId) &&
+          incoming().uid == existing().uid &&
+          incoming().id == existing().id &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'note', 'minutes', 'planetName', 'nextPlanetName', 'milestoneCompleted', 'syncedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(winId) && isOwner(userId);
+      }
+    }
+  }
+}

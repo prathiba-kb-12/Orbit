@@ -1,36 +1,53 @@
 import { useState } from 'react';
-import { ShieldCheck, EyeOff, Trash2, Mic, ClipboardCheck } from 'lucide-react';
+import { ShieldCheck, EyeOff, Trash2, Mic, ClipboardCheck, UserCog } from 'lucide-react';
 import type { OrbitState } from '../types';
 
 interface PrivacyViewProps {
   state: OrbitState;
+  userEmail?: string;
   onToggleReduceMotion: (enabled: boolean) => void;
   onToggleOnePasteCapture: (enabled: boolean) => void;
   onToggleVoiceAssistant: (enabled: boolean) => void;
   onDeleteAllData: () => void;
+  onOpenProfile?: () => void;
 }
 
 export function PrivacyView({
   state,
+  userEmail,
   onToggleReduceMotion,
   onToggleOnePasteCapture,
   onToggleVoiceAssistant,
   onDeleteAllData,
+  onOpenProfile,
 }: PrivacyViewProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
-          Privacy · Transparency &amp; Comfort
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-50 mt-1">
-          Your Data, Your Device
-        </h1>
-        <p className="text-sm text-slate-300 mt-1">
-          Orbit stores all goals, tasks, assignments, and insights inside your browser&apos;s localStorage only.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
+            Privacy · Transparency &amp; Comfort
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-50 mt-1">
+            Your Account, Your Space
+          </h1>
+          <p className="text-sm text-slate-300 mt-1">
+            Orbit isolates every user&apos;s goals, tasks, assignments, and wins strictly inside their authenticated account.
+          </p>
+        </div>
+
+        {onOpenProfile && (
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className="min-h-[42px] rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/12 px-4 text-xs font-extrabold text-slate-100 inline-flex items-center gap-2"
+          >
+            <UserCog className="w-4 h-4 text-amber-300" />
+            <span>Manage Profile &amp; Password</span>
+          </button>
+        )}
       </div>
 
       {/* Data Transparency Ledger */}
@@ -42,16 +59,16 @@ export function PrivacyView({
 
         <div className="space-y-3 text-sm text-slate-200">
           <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4">
-            <div className="font-extrabold text-slate-50">Browser localStorage Only</div>
+            <div className="font-extrabold text-slate-50">Private Per-User Cloud &amp; Device Sync</div>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              Your goals ({state.goals.length}), tasks ({state.tasks.length}), assignments ({state.assignments.length}), opportunities ({state.opportunities.length}), and wins ({state.wins.length}) are persisted locally under key <code className="font-mono-tabular text-amber-200">orbit_copilot_state_v2</code>. Orbit has no external database or user tracking account.
+              Your goals ({state.goals.length}), tasks ({state.tasks.length}), assignments ({state.assignments.length}), opportunities ({state.opportunities.length}), and wins ({state.wins.length}) are stored strictly under your private Firebase account{userEmail ? ` (${userEmail})` : ''} with Firestore rules blocking any cross-user access, plus a UID-scoped offline browser cache.
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4">
-            <div className="font-extrabold text-slate-50">Gemini AI Stateless Processing</div>
+            <div className="font-extrabold text-slate-50">Authenticated Gemini AI Processing</div>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              When you ask Orbit Assistant, break down a goal, or extract an assignment/opportunity file, only the prompt or attached file for that single request is sent to Gemini via server-side API routes for structured extraction — nothing is stored on Orbit&apos;s servers.
+              Backend AI endpoints verify your signed-in session token before processing any request. Only the prompt or attached file for that single request is sent to Gemini via server-side API routes.
             </p>
           </div>
 
@@ -144,17 +161,17 @@ export function PrivacyView({
         </div>
       </section>
 
-      {/* Delete All Data */}
+      {/* Delete All Workspace Data */}
       <section className="aurora-glass-card rounded-[28px] p-6 border border-amber-300/25 space-y-3">
-        <h2 className="text-base font-extrabold text-slate-50">Reset &amp; Erase Local Data</h2>
+        <h2 className="text-base font-extrabold text-slate-50">Reset &amp; Erase Workspace Data</h2>
         <p className="text-xs text-slate-300">
-          Clears everything stored in this browser immediately with no remote backup left behind.
+          Clears all goals, tasks, assignments, opportunities, and wins from your account workspace while keeping your login active. (To delete your login account completely, visit your Profile page.)
         </p>
 
         {confirmOpen ? (
           <div className="rounded-2xl bg-amber-400/12 border border-amber-300/35 p-4 flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-bold text-amber-100">
-              Erase all Orbit goals, tasks, assignments, opportunities, and wins from this browser?
+              Erase all Orbit goals, tasks, assignments, opportunities, and wins from your account?
             </span>
             <div className="flex gap-2">
               <button
