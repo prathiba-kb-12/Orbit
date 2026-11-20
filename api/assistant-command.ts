@@ -6,7 +6,7 @@ import {
   getGeminiClient,
   type ApiRequest,
   type ApiResponse,
-} from '../lib/gemini';
+} from '../lib/gemini.ts';
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method && req.method !== 'POST') {
