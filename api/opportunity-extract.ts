@@ -6,7 +6,7 @@ import {
   getGeminiClient,
   type ApiRequest,
   type ApiResponse,
-} from './_lib/gemini';
+} from '../lib/gemini';
 
 function addDaysISO(baseISO: string, days: number): string {
   const d = new Date(`${baseISO}T12:00:00Z`);

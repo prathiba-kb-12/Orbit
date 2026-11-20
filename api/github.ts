@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse } from './_lib/gemini';
+import type { ApiRequest, ApiResponse } from '../lib/gemini';
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method && req.method !== 'GET') {

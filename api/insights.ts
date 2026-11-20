@@ -6,7 +6,7 @@ import {
   getGeminiClient,
   type ApiRequest,
   type ApiResponse,
-} from './_lib/gemini';
+} from '../lib/gemini';
 
 async function handleWinNote(req: ApiRequest, res: ApiResponse) {
   const {
