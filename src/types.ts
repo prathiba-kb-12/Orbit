@@ -5,26 +5,7 @@ export type AppSection =
   | 'planner'
   | 'opportunities'
   | 'insights'
-  | 'privacy'
-  | 'profile';
-
-export interface UserProfile {
-  uid: string;
-  displayName: string;
-  email: string;
-  photoURL?: string;
-  studyBio?: string;
-  emailVerified: boolean;
-  createdAt: string;
-}
-
-export interface SavedAccountPreview {
-  uid: string;
-  displayName: string;
-  email: string;
-  photoURL?: string;
-  lastUsedAt: string;
-}
+  | 'privacy';
 
 export type BrainWeather = 'fried' | 'okay' | 'lockedIn';
 

@@ -12,27 +12,11 @@ import type {
   OrbitTask,
 } from '../types';
 import type { InsightsMetrics } from './orbitStore';
-import { auth } from './firebase';
-
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Please sign in to your Orbit account first.');
-  }
-  const token = await user.getIdToken();
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const authHeaders = await getAuthHeaders();
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
@@ -167,10 +151,7 @@ export async function generateWinNote(params: {
 }
 
 export async function fetchGitHubActivity(username: string): Promise<GitHubActivity> {
-  const authHeaders = await getAuthHeaders();
-  const res = await fetch(`/api/github?username=${encodeURIComponent(username.trim())}`, {
-    headers: authHeaders,
-  });
+  const res = await fetch(`/api/github?username=${encodeURIComponent(username.trim())}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data?.error || 'Could not look up that GitHub handle right now.');

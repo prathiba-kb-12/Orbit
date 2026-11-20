@@ -1,4 +1,4 @@
-import type { AppSection, BrainWeather, UserProfile } from '../types';
+import type { AppSection, BrainWeather } from '../types';
 import {
   Sun,
   Target,
@@ -8,10 +8,8 @@ import {
   BarChart3,
   ShieldCheck,
   Sparkles,
-  LogOut,
 } from 'lucide-react';
 import { getWeatherAccent } from './CircularRing';
-import { UserAvatar } from './UserAvatar';
 
 interface NavShellProps {
   activeSection: AppSection;
@@ -19,8 +17,6 @@ interface NavShellProps {
   weather: BrainWeather;
   onOpenAssistant: () => void;
   missedCount: number;
-  profile?: UserProfile | null;
-  onSignOut?: () => void;
 }
 
 const NAV_ITEMS: Array<{
@@ -44,8 +40,6 @@ export function NavShell({
   weather,
   onOpenAssistant,
   missedCount,
-  profile,
-  onSignOut,
 }: NavShellProps) {
   const accent = getWeatherAccent(weather);
 
@@ -73,7 +67,7 @@ export function NavShell({
           </div>
         </button>
 
-        <nav aria-label="Main sections" className="mt-7 flex-1 space-y-1.5 overflow-y-auto">
+        <nav aria-label="Main sections" className="mt-7 flex-1 space-y-1.5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = activeSection === item.id;
@@ -103,49 +97,7 @@ export function NavShell({
           })}
         </nav>
 
-        <div className="pt-4 border-t border-white/10 space-y-3">
-          {profile && (
-            <div
-              className={`rounded-2xl border p-2 flex items-center justify-between gap-2 transition-colors ${
-                activeSection === 'profile'
-                  ? `${accent.softBg} ${accent.border}`
-                  : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.07]'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => onSelectSection('profile')}
-                className="flex items-center gap-2.5 min-w-0 flex-1 text-left rounded-xl"
-                title="Open profile & account settings"
-              >
-                <UserAvatar
-                  name={profile.displayName}
-                  photoURL={profile.photoURL}
-                  size="sm"
-                />
-                <div className="min-w-0">
-                  <div className="text-xs font-extrabold text-slate-100 truncate">
-                    {profile.displayName}
-                  </div>
-                  <div className="text-[11px] text-slate-400 truncate">
-                    {profile.email}
-                  </div>
-                </div>
-              </button>
-              {onSignOut && (
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  aria-label="Sign out"
-                  title="Sign out"
-                  className="p-2 rounded-xl text-slate-400 hover:text-amber-200 hover:bg-white/10 shrink-0"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          )}
-
+        <div className="pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={onOpenAssistant}
@@ -158,7 +110,7 @@ export function NavShell({
       </aside>
 
       {/* Mobile Top Header */}
-      <header className="lg:hidden sticky top-0 z-30 border-b border-white/10 bg-[#06081a]/85 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between gap-2">
+      <header className="lg:hidden sticky top-0 z-30 border-b border-white/10 bg-[#06081a]/85 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between">
         <button
           type="button"
           onClick={() => onSelectSection('today')}
@@ -172,30 +124,14 @@ export function NavShell({
           <span className="text-lg font-extrabold tracking-tight text-slate-50">Orbit</span>
         </button>
 
-        <div className="flex items-center gap-2">
-          {profile && (
-            <button
-              type="button"
-              onClick={() => onSelectSection('profile')}
-              aria-label="Open profile and account settings"
-              className={`p-1 rounded-2xl border transition-colors ${
-                activeSection === 'profile'
-                  ? 'border-amber-300/60 bg-amber-400/15'
-                  : 'border-white/15 bg-white/[0.05]'
-              }`}
-            >
-              <UserAvatar name={profile.displayName} photoURL={profile.photoURL} size="sm" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onOpenAssistant}
-            className="min-h-[40px] rounded-2xl bg-amber-400/90 hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3.5 py-2 flex items-center gap-1.5 transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Assistant</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenAssistant}
+          className="min-h-[40px] rounded-2xl bg-amber-400/90 hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3.5 py-2 flex items-center gap-1.5 transition-colors"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Assistant</span>
+        </button>
       </header>
 
       {/* Mobile Bottom Navigation */}
