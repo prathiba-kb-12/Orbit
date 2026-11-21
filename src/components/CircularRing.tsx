@@ -15,44 +15,44 @@ interface CircularRingProps {
 export function getWeatherAccent(weather: BrainWeather) {
   if (weather === 'fried') {
     return {
-      stroke: '#2DD4BF',
-      glow: 'rgba(45, 212, 191, 0.42)',
+      stroke: '#5EEAD4',
+      glow: 'rgba(94, 234, 212, 0.16)',
       text: 'text-teal-300',
-      softBg: 'bg-teal-400/15',
-      border: 'border-teal-300/30',
-      button: 'bg-teal-400 text-slate-950 hover:bg-teal-300',
+      softBg: 'bg-teal-400/10',
+      border: 'border-teal-400/30',
+      button: 'bg-[#D6A04A] text-[#111318] hover:bg-[#E0AD5B]',
       ringDot: 'bg-teal-300',
     };
   }
   if (weather === 'okay') {
     return {
-      stroke: '#FBBF24',
-      glow: 'rgba(251, 191, 36, 0.38)',
-      text: 'text-amber-300',
-      softBg: 'bg-amber-400/15',
-      border: 'border-amber-300/30',
-      button: 'bg-amber-400 text-slate-950 hover:bg-amber-300',
-      ringDot: 'bg-amber-300',
+      stroke: '#D6A04A',
+      glow: 'rgba(214, 160, 74, 0.18)',
+      text: 'text-[#D6A04A]',
+      softBg: 'bg-[#D6A04A]/10',
+      border: 'border-[#D6A04A]/35',
+      button: 'bg-[#D6A04A] text-[#111318] hover:bg-[#E0AD5B]',
+      ringDot: 'bg-[#D6A04A]',
     };
   }
   return {
-    stroke: '#A78BFA',
-    glow: 'rgba(167, 139, 250, 0.45)',
-    text: 'text-violet-300',
-    softBg: 'bg-violet-400/15',
-    border: 'border-violet-300/30',
-    button: 'bg-violet-400 text-slate-950 hover:bg-violet-300',
-    ringDot: 'bg-violet-300',
+    stroke: '#A5B4FC',
+    glow: 'rgba(165, 180, 252, 0.16)',
+    text: 'text-indigo-300',
+    softBg: 'bg-indigo-400/10',
+    border: 'border-indigo-400/30',
+    button: 'bg-[#D6A04A] text-[#111318] hover:bg-[#E0AD5B]',
+    ringDot: 'bg-indigo-300',
   };
 }
 
 export function CircularRing({
   progress,
-  size = 200,
-  strokeWidth = 8,
+  size = 176,
+  strokeWidth = 7,
   weather,
-  isFocusing = false,
-  isCompletedGlow = false,
+  isFocusing: _isFocusing = false,
+  isCompletedGlow: _isCompletedGlow = false,
   reduceMotion = false,
   children,
 }: CircularRingProps) {
@@ -64,7 +64,7 @@ export function CircularRing({
 
   return (
     <div
-      className="relative inline-flex items-center justify-center"
+      className="relative inline-flex items-center justify-center shrink-0"
       style={{ width: size, height: size }}
     >
       <svg
@@ -72,20 +72,13 @@ export function CircularRing({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="-rotate-90"
-        style={{
-          filter:
-            isFocusing || isCompletedGlow
-              ? `drop-shadow(0 0 14px ${accent.glow})`
-              : `drop-shadow(0 0 6px ${accent.glow})`,
-          transition: reduceMotion ? 'none' : 'filter 500ms ease',
-        }}
       >
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.08)"
+          stroke="#262B36"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -101,7 +94,7 @@ export function CircularRing({
           style={{
             transition: reduceMotion
               ? 'none'
-              : 'stroke-dashoffset 600ms cubic-bezier(0.16, 1, 0.3, 1), stroke 400ms ease',
+              : 'stroke-dashoffset 300ms cubic-bezier(0.16, 1, 0.3, 1), stroke 250ms ease',
           }}
         />
       </svg>

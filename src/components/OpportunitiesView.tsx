@@ -41,9 +41,11 @@ interface OpportunitiesViewProps {
     text?: string;
     fileBase64?: string;
     mimeType?: string;
-  }) => Promise<Omit<ExtractedOpportunityDraft, 'reminderDaysBefore' | 'prepTasks'> & {
-    prepTasks: Array<{ title: string; estimatedMinutes: number; firstAction: string }>;
-  }>;
+  }) => Promise<
+    Omit<ExtractedOpportunityDraft, 'reminderDaysBefore' | 'prepTasks'> & {
+      prepTasks: Array<{ title: string; estimatedMinutes: number; firstAction: string }>;
+    }
+  >;
   onSaveOpportunity: (draft: ExtractedOpportunityDraft) => void;
   onUpdateOpportunity: (id: string, patch: Partial<Opportunity>) => void;
   onDeleteOpportunity: (id: string) => void;
@@ -122,35 +124,33 @@ export function OpportunitiesView({
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
-          Opportunities · External Deadlines
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-50 mt-1">
+        <p className="text-xs font-medium text-[#D6A04A]">Opportunities · External Deadlines</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#F3F4F6] mt-1">
           Internships, Hackathons &amp; Scholarships
         </h1>
-        <p className="text-sm text-slate-300 mt-1">
-          Paste any college WhatsApp forward, email, or upload a screenshot. Review &amp; edit before saving.
+        <p className="text-sm text-[#9CA3AF] mt-1">
+          Paste an email, forward, or upload a screenshot. Review and edit details before saving.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-2xl bg-amber-400/12 border border-amber-300/30 px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-xl bg-[#D6A04A]/10 border border-[#D6A04A]/35 px-4 py-3 text-sm text-[#F5DEB3]">
           {error}
         </div>
       )}
 
-        {/* One-Paste Capture */}
-      <section className="aurora-glass-card rounded-[28px] p-5 sm:p-6 space-y-4">
+      {/* One-Paste Capture */}
+      <section className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm font-extrabold text-amber-300">
+          <div className="flex items-center gap-2 text-sm font-medium text-[#D6A04A]">
             <Sparkles className="w-4 h-4" />
             <span>One-Paste Capture</span>
           </div>
           {state.preferences.onePasteCaptureEnabled && (
-            <label className="min-h-[40px] rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 px-3.5 py-2 text-xs font-extrabold text-slate-100 flex items-center gap-2 cursor-pointer">
-              <Upload className="w-4 h-4" />
+            <label className="min-h-[38px] rounded-xl bg-[#14171D] hover:bg-[#222630] border border-[#262B36] px-3.5 py-2 text-xs font-medium text-[#E5E7EB] flex items-center gap-2 cursor-pointer transition-colors">
+              <Upload className="w-4 h-4 text-[#9CA3AF]" />
               <span>{fileName ? fileName : 'Upload Screenshot / PDF'}</span>
               <input
                 type="file"
@@ -163,9 +163,9 @@ export function OpportunitiesView({
         </div>
 
         {!state.preferences.onePasteCaptureEnabled ? (
-          <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-slate-300">
-              AI One-Paste Capture is turned off in Privacy. You can still add opportunities manually below or re-enable capture in Privacy.
+          <div className="rounded-xl bg-[#14171D] border border-[#242934] p-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-[#9CA3AF]">
+              AI One-Paste Capture is turned off in Settings. You can still add opportunities manually below.
             </p>
             <button
               type="button"
@@ -183,63 +183,63 @@ export function OpportunitiesView({
                   prepTasks: [],
                 })
               }
-              className="min-h-[40px] rounded-2xl bg-white/10 hover:bg-white/15 text-slate-100 font-bold text-xs px-4 py-2"
+              className="min-h-[38px] rounded-xl bg-[#222630] hover:bg-[#2A2F3B] text-[#F3F4F6] font-medium text-xs px-4 py-2"
             >
               Add Manually
             </button>
           </div>
         ) : (
-        <form onSubmit={handleExtract} className="space-y-3">
-          <textarea
-            rows={3}
-            value={pasteText}
-            onChange={(e) => setPasteText(e.target.value)}
-            placeholder="Paste internship email, hackathon announcement, or scholarship link details..."
-            className="w-full rounded-2xl bg-white/[0.06] border border-white/12 p-4 text-sm text-slate-100 placeholder:text-slate-400"
-          />
-          <div className="flex flex-wrap gap-2.5">
-            <button
-              type="submit"
-              disabled={loading || (!pasteText.trim() && !fileBase64)}
-              className="min-h-[44px] rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm px-5 py-2 disabled:opacity-50"
-            >
-              {loading ? 'Extracting details...' : 'Extract for Confirmation'}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setDraft({
-                  title: '',
-                  organization: '',
-                  category: 'Internship',
-                  applicationDeadline: today,
-                  eventDate: '',
-                  registrationLink: '',
-                  eligibility: '',
-                  requirements: '',
-                  reminderDaysBefore: 3,
-                  prepTasks: [],
-                })
-              }
-              className="min-h-[44px] rounded-2xl bg-white/10 hover:bg-white/15 text-slate-100 font-bold text-sm px-4 py-2"
-            >
-              Add Manually
-            </button>
-          </div>
-        </form>
+          <form onSubmit={handleExtract} className="space-y-3">
+            <textarea
+              rows={3}
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder="Paste internship email, hackathon announcement, or scholarship details..."
+              className="w-full rounded-xl bg-[#14171D] border border-[#262B36] p-3.5 text-sm text-[#F3F4F6] placeholder:text-[#6B7280] focus:outline-none focus:border-[#D6A04A]"
+            />
+            <div className="flex flex-wrap gap-2.5">
+              <button
+                type="submit"
+                disabled={loading || (!pasteText.trim() && !fileBase64)}
+                className="min-h-[42px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-sm px-5 py-2 disabled:opacity-50 transition-colors"
+              >
+                {loading ? 'Extracting details...' : 'Extract for Confirmation'}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setDraft({
+                    title: '',
+                    organization: '',
+                    category: 'Internship',
+                    applicationDeadline: today,
+                    eventDate: '',
+                    registrationLink: '',
+                    eligibility: '',
+                    requirements: '',
+                    reminderDaysBefore: 3,
+                    prepTasks: [],
+                  })
+                }
+                className="min-h-[42px] rounded-xl bg-[#222630] hover:bg-[#2A2F3B] border border-[#2E3442] text-[#E5E7EB] font-medium text-sm px-4 py-2"
+              >
+                Add Manually
+              </button>
+            </div>
+          </form>
         )}
 
         {/* Confirmation Screen Before Saving */}
         {draft && (
-          <div className="mt-4 rounded-2xl bg-[#0b102d] border border-amber-300/35 p-5 space-y-4">
+          <div className="mt-4 rounded-xl bg-[#14171D] border border-[#D6A04A]/40 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-amber-200">
+              <h2 className="text-sm font-semibold text-[#D6A04A]">
                 Confirm &amp; Edit Before Saving
               </h2>
               <button
                 type="button"
                 onClick={() => setDraft(null)}
-                className="text-xs font-bold text-slate-400 hover:text-slate-200"
+                className="text-xs font-medium text-[#9CA3AF] hover:text-[#F3F4F6]"
               >
                 Cancel
               </button>
@@ -247,31 +247,33 @@ export function OpportunitiesView({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Title</label>
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">Title</label>
                 <input
                   type="text"
                   value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                  className="w-full min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Organization</label>
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">
+                  Organization
+                </label>
                 <input
                   type="text"
                   value={draft.organization}
                   onChange={(e) => setDraft({ ...draft, organization: e.target.value })}
-                  className="w-full min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Category</label>
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">Category</label>
                 <select
                   value={draft.category}
                   onChange={(e) =>
                     setDraft({ ...draft, category: e.target.value as OpportunityCategory })
                   }
-                  className="w-full min-h-[40px] rounded-xl bg-[#101638] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -281,18 +283,18 @@ export function OpportunitiesView({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">
                   Application Deadline
                 </label>
                 <input
                   type="date"
                   value={draft.applicationDeadline}
                   onChange={(e) => setDraft({ ...draft, applicationDeadline: e.target.value })}
-                  className="w-full min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">
                   Registration Link (optional)
                 </label>
                 <input
@@ -300,11 +302,11 @@ export function OpportunitiesView({
                   value={draft.registrationLink || ''}
                   onChange={(e) => setDraft({ ...draft, registrationLink: e.target.value })}
                   placeholder="https://..."
-                  className="w-full min-h-[40px] rounded-xl bg-white/[0.06] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#9CA3AF] mb-1">
                   Remind me before deadline
                 </label>
                 <select
@@ -312,7 +314,7 @@ export function OpportunitiesView({
                   onChange={(e) =>
                     setDraft({ ...draft, reminderDaysBefore: Number(e.target.value) })
                   }
-                  className="w-full min-h-[40px] rounded-xl bg-[#101638] border border-white/12 px-3 text-sm text-white"
+                  className="w-full min-h-[38px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3 text-sm text-[#F3F4F6]"
                 >
                   <option value={1}>1 day before</option>
                   <option value={3}>3 days before</option>
@@ -324,13 +326,13 @@ export function OpportunitiesView({
 
             {draft.prepTasks.length > 0 && (
               <div className="space-y-2">
-                <div className="text-xs font-bold text-slate-300">
+                <div className="text-xs font-medium text-[#9CA3AF]">
                   Suggested small prep tasks to schedule into Today:
                 </div>
                 {draft.prepTasks.map((pt, idx) => (
                   <label
                     key={idx}
-                    className="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer"
+                    className="flex items-center gap-2.5 text-xs text-[#E5E7EB] cursor-pointer"
                   >
                     <input
                       type="checkbox"
@@ -363,7 +365,7 @@ export function OpportunitiesView({
                 setFileBase64(undefined);
                 setMimeType(undefined);
               }}
-              className="min-h-[44px] rounded-2xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold text-sm px-5 flex items-center gap-1.5"
+              className="min-h-[40px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-sm px-4 flex items-center gap-1.5"
             >
               <Check className="w-4 h-4" />
               <span>Save Opportunity</span>
@@ -373,16 +375,16 @@ export function OpportunitiesView({
       </section>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {(['all', ...STATUS_OPTIONS] as const).map((st) => (
           <button
             key={st}
             type="button"
             onClick={() => setStatusFilter(st)}
-            className={`min-h-[36px] rounded-xl px-3 text-xs font-extrabold transition-colors ${
+            className={`min-h-[34px] rounded-xl px-3 text-xs font-medium transition-colors ${
               statusFilter === st
-                ? 'bg-amber-400 text-slate-950'
-                : 'bg-white/[0.06] text-slate-300 hover:text-white'
+                ? 'bg-[#D6A04A] text-[#111318] font-semibold'
+                : 'bg-[#1A1D24] border border-[#262B36] text-[#9CA3AF] hover:text-[#F3F4F6]'
             }`}
           >
             {st === 'all' ? 'All' : st}
@@ -392,10 +394,10 @@ export function OpportunitiesView({
 
       {/* Saved Opportunities */}
       {filteredOpps.length === 0 ? (
-        <div className="aurora-glass-card rounded-[28px] p-8 text-center">
-          <Compass className="w-8 h-8 text-amber-300 mx-auto mb-2" />
-          <h2 className="text-xl font-extrabold text-slate-50">No opportunities saved yet</h2>
-          <p className="text-sm text-slate-300 mt-1">
+        <div className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-8 text-center">
+          <Compass className="w-7 h-7 text-[#D6A04A] mx-auto mb-2" />
+          <h2 className="text-lg font-semibold text-[#F3F4F6]">No opportunities saved yet</h2>
+          <p className="text-sm text-[#9CA3AF] mt-1">
             Use One-Paste Capture above whenever a hackathon, internship, or scholarship pops up.
           </p>
         </div>
@@ -413,36 +415,35 @@ export function OpportunitiesView({
             return (
               <article
                 key={opp.id}
-                className="aurora-glass-card rounded-[24px] p-5 space-y-3"
+                className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-5 space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-xs font-bold text-slate-300">
-                      <span className="text-amber-300 uppercase">{opp.category}</span>
+                    <div className="text-xs text-[#9CA3AF]">
+                      <span className="text-[#D6A04A] font-medium uppercase">{opp.category}</span>
                       {' · '}
                       <span>{opp.organization}</span>
                       {' · '}
                       <span className="font-mono-tabular">
-                        Due {opp.applicationDeadline} (
-                        {daysLeft >= 0 ? `${daysLeft}d left` : 'past'})
+                        Due {opp.applicationDeadline} ({daysLeft >= 0 ? `${daysLeft}d left` : 'past'})
                       </span>
                     </div>
-                    <h3 className="text-lg font-extrabold text-slate-50 mt-1">{opp.title}</h3>
+                    <h3 className="text-base font-semibold text-[#F3F4F6] mt-1">{opp.title}</h3>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => onDeleteOpportunity(opp.id)}
                     aria-label={`Delete ${opp.title}`}
-                    className="min-h-[36px] min-w-[36px] rounded-xl hover:bg-white/10 flex items-center justify-center text-slate-400"
+                    className="min-h-[34px] min-w-[34px] rounded-lg hover:bg-[#222630] flex items-center justify-center text-[#6B7280] hover:text-[#F3F4F6]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
                 {reminderActive && (
-                  <div className="rounded-xl bg-amber-400/12 border border-amber-300/30 px-3 py-2 text-xs font-bold text-amber-200 flex items-center gap-2">
-                    <Bell className="w-3.5 h-3.5 shrink-0" />
+                  <div className="rounded-xl bg-[#D6A04A]/10 border border-[#D6A04A]/35 px-3 py-2 text-xs font-medium text-[#F5DEB3] flex items-center gap-2">
+                    <Bell className="w-3.5 h-3.5 text-[#D6A04A] shrink-0" />
                     <span>
                       Reminder window open ({daysLeft === 0 ? 'due today' : `${daysLeft}d left`})
                     </span>
@@ -450,7 +451,7 @@ export function OpportunitiesView({
                 )}
 
                 {opp.requirements && (
-                  <p className="text-xs text-slate-300">{opp.requirements}</p>
+                  <p className="text-xs text-[#9CA3AF]">{opp.requirements}</p>
                 )}
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -463,7 +464,7 @@ export function OpportunitiesView({
                         })
                       }
                       aria-label="Opportunity status"
-                      className="min-h-[36px] rounded-xl bg-[#101638] border border-white/15 px-2.5 text-xs font-extrabold text-slate-100"
+                      className="min-h-[34px] rounded-lg bg-[#14171D] border border-[#262B36] px-2.5 text-xs font-medium text-[#F3F4F6]"
                     >
                       {STATUS_OPTIONS.map((st) => (
                         <option key={st} value={st}>
@@ -480,7 +481,7 @@ export function OpportunitiesView({
                         })
                       }
                       aria-label="Reminder timing"
-                      className="min-h-[36px] rounded-xl bg-[#101638] border border-white/15 px-2 text-xs font-bold text-slate-300"
+                      className="min-h-[34px] rounded-lg bg-[#14171D] border border-[#262B36] px-2 text-xs text-[#9CA3AF]"
                     >
                       <option value={1}>1d alert</option>
                       <option value={3}>3d alert</option>
@@ -495,7 +496,7 @@ export function OpportunitiesView({
                         href={opp.registrationLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="min-h-[36px] rounded-xl bg-white/10 hover:bg-white/15 px-3 text-xs font-bold text-slate-100 inline-flex items-center gap-1"
+                        className="min-h-[34px] rounded-lg bg-[#222630] hover:bg-[#2A2F3B] px-3 text-xs font-medium text-[#E5E7EB] inline-flex items-center gap-1"
                       >
                         <span>Link</span>
                         <ExternalLink className="w-3 h-3" />
@@ -504,9 +505,9 @@ export function OpportunitiesView({
                     <button
                       type="button"
                       onClick={() => onAddPrepTaskToToday(opp)}
-                      className="min-h-[36px] rounded-xl bg-teal-400/18 hover:bg-teal-400/28 border border-teal-300/30 px-3 text-xs font-extrabold text-teal-100 inline-flex items-center gap-1"
+                      className="min-h-[34px] rounded-lg bg-[#D6A04A]/15 hover:bg-[#D6A04A]/25 border border-[#D6A04A]/35 px-3 text-xs font-medium text-[#F5DEB3] inline-flex items-center gap-1"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 text-[#D6A04A]" />
                       <span>Prep in Today</span>
                     </button>
                   </div>

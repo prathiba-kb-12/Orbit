@@ -721,7 +721,7 @@ export default function App() {
 
   return (
     <ErrorBoundary onReset={() => setActiveSection('today')}>
-      <div className="relative min-h-dvh text-slate-100">
+      <div className="relative min-h-dvh bg-[#111318] text-[#F3F4F6]">
         <CosmosBackdrop weather={weather} reduceMotion={state.preferences.reduceMotion} />
 
         <NavShell
@@ -735,7 +735,7 @@ export default function App() {
           missedCount={missedCount}
         />
 
-        <main className="relative z-10 lg:pl-64 pb-24 lg:pb-10">
+        <main className="relative z-10 lg:pl-56 pb-24 lg:pb-10">
           {activeSection === 'today' && (
             <TodayView
               state={state}

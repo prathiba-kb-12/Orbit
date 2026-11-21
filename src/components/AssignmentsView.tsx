@@ -7,7 +7,6 @@ import {
   ArrowDown,
   Plus,
   Trash2,
-  Circle,
   Sparkles,
 } from 'lucide-react';
 import type { Assignment, OrbitState, OrbitTask } from '../types';
@@ -61,11 +60,7 @@ export function AssignmentsView({
     if (!file) return;
     setFileName(file.name);
 
-    // If plain text / markdown / csv, read text directly for fastest reliability
-    if (
-      file.type.startsWith('text/') ||
-      /\.(txt|md|csv)$/i.test(file.name)
-    ) {
+    if (file.type.startsWith('text/') || /\.(txt|md|csv)$/i.test(file.name)) {
       const content = await file.text();
       setText((prev) => (prev ? `${prev}\n\n${content}` : content));
       setFileBase64(undefined);
@@ -99,35 +94,36 @@ export function AssignmentsView({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
-          Assignments · Academic Workspace
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-50 mt-1">
+        <p className="text-xs font-medium text-[#D6A04A]">Assignments &amp; Work</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#F3F4F6] mt-1">
           Assignments &amp; Exams
         </h1>
-        <p className="text-sm text-slate-300 mt-1">
-          Upload a PDF, image, screenshot, or syllabus note. Orbit breaks it into small editable steps and gently rebalances your daily schedule.
+        <p className="text-sm text-[#9CA3AF] mt-1">
+          Upload a PDF, image, screenshot, or syllabus note. Orbit breaks it into small editable steps.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-2xl bg-amber-400/12 border border-amber-300/30 px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-xl bg-[#D6A04A]/10 border border-[#D6A04A]/35 px-4 py-3 text-sm text-[#F5DEB3]">
           {error}
         </div>
       )}
 
       {/* Upload & Extract Card */}
-      <form onSubmit={handleSubmit} className="aurora-glass-card rounded-[28px] p-5 sm:p-6 space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-5 sm:p-6 space-y-4"
+      >
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-sm font-extrabold text-amber-300">
+          <div className="flex items-center gap-2 text-sm font-medium text-[#D6A04A]">
             <Sparkles className="w-4 h-4" />
             <span>Drop an assignment prompt, exam notice, or file</span>
           </div>
 
-          <label className="min-h-[42px] rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 px-4 py-2 text-xs font-extrabold text-slate-100 flex items-center gap-2 cursor-pointer">
-            <Upload className="w-4 h-4" />
+          <label className="min-h-[38px] rounded-xl bg-[#14171D] hover:bg-[#222630] border border-[#262B36] px-3.5 py-2 text-xs font-medium text-[#E5E7EB] flex items-center gap-2 cursor-pointer transition-colors">
+            <Upload className="w-4 h-4 text-[#9CA3AF]" />
             <span>{fileName ? fileName : 'Upload PDF / Image / Doc'}</span>
             <input
               type="file"
@@ -142,20 +138,20 @@ export function AssignmentsView({
           rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste assignment instructions, exam syllabus, or portal message (e.g., 'CS204 Data Analysis Lab due next Friday — collect dataset, analyze correlations, plot charts, submit PDF')..."
-          className="w-full rounded-2xl bg-white/[0.06] border border-white/12 p-4 text-sm text-slate-100 placeholder:text-slate-400"
+          placeholder="Paste assignment instructions, exam syllabus, or portal message..."
+          className="w-full rounded-xl bg-[#14171D] border border-[#262B36] p-3.5 text-sm text-[#F3F4F6] placeholder:text-[#6B7280] focus:outline-none focus:border-[#D6A04A]"
         />
 
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
             disabled={loading || (!text.trim() && !fileBase64)}
-            className="min-h-[46px] rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm px-6 py-2.5 disabled:opacity-50"
+            className="min-h-[42px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-sm px-5 py-2 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Extracting & breaking down...' : 'Extract & Break Into Steps'}
           </button>
           {fileName && (
-            <span className="text-xs text-teal-200 flex items-center gap-1.5">
+            <span className="text-xs text-teal-300 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5" />
               <span>Attached: {fileName}</span>
             </span>
@@ -165,14 +161,14 @@ export function AssignmentsView({
 
       {/* Assignment & Exam Cards */}
       {state.assignments.length === 0 ? (
-        <div className="aurora-glass-card rounded-[28px] p-8 text-center">
-          <h2 className="text-xl font-extrabold text-slate-50">No assignments or exams yet</h2>
-          <p className="text-sm text-slate-300 mt-1">
+        <div className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-8 text-center">
+          <h2 className="text-lg font-semibold text-[#F3F4F6]">No assignments or exams yet</h2>
+          <p className="text-sm text-[#9CA3AF] mt-1">
             Add one above and Orbit will split it into calm 10–25 minute steps without overloading any day.
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {state.assignments.map((assignment: Assignment) => {
             const { tasks, completed, total, percent } = getAssignmentProgress(
               assignment,
@@ -183,12 +179,14 @@ export function AssignmentsView({
             return (
               <section
                 key={assignment.id}
-                className="aurora-glass-card rounded-[28px] p-5 sm:p-6 space-y-4"
+                className="bg-[#1A1D24] border border-[#262B36] rounded-2xl p-5 sm:p-6 space-y-4"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
-                    <div className="text-xs font-bold text-slate-300">
-                      <span className="uppercase text-amber-300">{assignment.kind}</span>
+                    <div className="text-xs text-[#9CA3AF]">
+                      <span className="uppercase text-[#D6A04A] font-medium">
+                        {assignment.kind}
+                      </span>
                       {' · '}
                       <span>{assignment.subject}</span>
                       {' · '}
@@ -197,17 +195,17 @@ export function AssignmentsView({
                       </span>
                       {assignment.sourceFileName ? ` · ${assignment.sourceFileName}` : ''}
                     </div>
-                    <h2 className="text-xl font-extrabold text-slate-50 mt-1">
+                    <h2 className="text-lg font-semibold text-[#F3F4F6] mt-1">
                       {assignment.title}
                     </h2>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-lg font-extrabold font-mono-tabular text-teal-300">
+                      <div className="text-base font-semibold font-mono-tabular text-teal-300">
                         {percent}%
                       </div>
-                      <div className="text-xs text-slate-400 font-mono-tabular">
+                      <div className="text-xs text-[#9CA3AF] font-mono-tabular">
                         {completed}/{total} steps
                       </div>
                     </div>
@@ -215,7 +213,7 @@ export function AssignmentsView({
                       type="button"
                       onClick={() => onDeleteAssignment(assignment.id)}
                       aria-label={`Delete ${assignment.title}`}
-                      className="min-h-[40px] min-w-[40px] rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-slate-200"
+                      className="min-h-[36px] min-w-[36px] rounded-lg hover:bg-[#222630] flex items-center justify-center text-[#6B7280] hover:text-[#F3F4F6]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -223,11 +221,11 @@ export function AssignmentsView({
                 </div>
 
                 {assignment.requirements.length > 0 && (
-                  <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  <div className="rounded-xl bg-[#14171D] border border-[#242934] p-3.5">
+                    <div className="text-xs font-medium text-[#9CA3AF] mb-1.5">
                       Extracted Requirements
                     </div>
-                    <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                    <ul className="text-xs text-[#D1D5DB] space-y-1 list-disc list-inside">
                       {assignment.requirements.map((req, rIdx) => (
                         <li key={rIdx}>{req}</li>
                       ))}
@@ -244,7 +242,7 @@ export function AssignmentsView({
                     return (
                       <div
                         key={task.id}
-                        className="rounded-2xl bg-white/[0.03] border border-white/10 px-3.5 py-2.5 flex items-center justify-between gap-2"
+                        className="rounded-xl bg-[#14171D] border border-[#242934] px-3.5 py-2.5 flex items-center justify-between gap-2"
                       >
                         {isEditing ? (
                           <form
@@ -262,7 +260,7 @@ export function AssignmentsView({
                               type="text"
                               value={editingTitle}
                               onChange={(e) => setEditingTitle(e.target.value)}
-                              className="flex-1 min-h-[36px] rounded-xl bg-white/10 border border-white/20 px-3 text-sm text-white"
+                              className="flex-1 min-h-[34px] rounded-lg bg-[#1A1D24] border border-[#2E3442] px-3 text-sm text-[#F3F4F6]"
                             />
                             <input
                               type="number"
@@ -270,11 +268,11 @@ export function AssignmentsView({
                               max={60}
                               value={editingMinutes}
                               onChange={(e) => setEditingMinutes(Number(e.target.value))}
-                              className="w-20 min-h-[36px] rounded-xl bg-white/10 border border-white/20 px-2 text-sm text-white font-mono-tabular"
+                              className="w-20 min-h-[34px] rounded-lg bg-[#1A1D24] border border-[#2E3442] px-2 text-sm text-[#F3F4F6] font-mono-tabular"
                             />
                             <button
                               type="submit"
-                              className="min-h-[36px] rounded-xl bg-amber-400 text-slate-950 font-extrabold text-xs px-3"
+                              className="min-h-[34px] rounded-lg bg-[#D6A04A] text-[#111318] font-semibold text-xs px-3"
                             >
                               Save
                             </button>
@@ -284,26 +282,26 @@ export function AssignmentsView({
                             <button
                               type="button"
                               onClick={() => onToggleTaskDone(task)}
-                              className="flex items-center gap-3 flex-1 text-left min-h-[36px]"
+                              className="flex items-center gap-3 flex-1 text-left min-h-[34px]"
                             >
                               <span
-                                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
                                   done
-                                    ? 'bg-teal-400 border-teal-300 text-slate-950'
-                                    : 'border-white/30 bg-white/5 text-transparent'
+                                    ? 'bg-teal-400 border-teal-400 text-[#111318]'
+                                    : 'border-[#3B4252] bg-[#1A1D24] text-transparent'
                                 }`}
                               >
-                                {done ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3 h-3" />}
+                                <Check className="w-3.5 h-3.5" />
                               </span>
                               <div>
                                 <div
-                                  className={`text-sm font-bold ${
-                                    done ? 'line-through text-slate-400' : 'text-slate-100'
+                                  className={`text-sm font-medium ${
+                                    done ? 'line-through text-[#6B7280]' : 'text-[#F3F4F6]'
                                   }`}
                                 >
                                   {task.title}
                                 </div>
-                                <div className="text-xs text-slate-400 font-mono-tabular">
+                                <div className="text-xs text-[#9CA3AF] font-mono-tabular">
                                   {task.estimatedMinutes}m · scheduled {task.scheduledDate}
                                 </div>
                               </div>
@@ -315,7 +313,7 @@ export function AssignmentsView({
                                 disabled={idx === 0}
                                 onClick={() => onMoveTaskOrder(assignment.id, task.id, 'up')}
                                 aria-label="Move up"
-                                className="min-h-[34px] min-w-[34px] rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-300 disabled:opacity-30"
+                                className="min-h-[32px] min-w-[32px] rounded-lg hover:bg-[#222630] flex items-center justify-center text-[#9CA3AF] disabled:opacity-30"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
@@ -324,7 +322,7 @@ export function AssignmentsView({
                                 disabled={idx === tasks.length - 1}
                                 onClick={() => onMoveTaskOrder(assignment.id, task.id, 'down')}
                                 aria-label="Move down"
-                                className="min-h-[34px] min-w-[34px] rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-300 disabled:opacity-30"
+                                className="min-h-[32px] min-w-[32px] rounded-lg hover:bg-[#222630] flex items-center justify-center text-[#9CA3AF] disabled:opacity-30"
                               >
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
@@ -335,7 +333,7 @@ export function AssignmentsView({
                                   setEditingTitle(task.title);
                                   setEditingMinutes(task.estimatedMinutes);
                                 }}
-                                className="min-h-[34px] rounded-lg hover:bg-white/10 px-2 text-xs font-bold text-slate-300"
+                                className="min-h-[32px] rounded-lg hover:bg-[#222630] px-2 text-xs font-medium text-[#9CA3AF] hover:text-[#F3F4F6]"
                               >
                                 Edit
                               </button>
@@ -343,7 +341,7 @@ export function AssignmentsView({
                                 type="button"
                                 onClick={() => onDeleteTask(task.id)}
                                 aria-label="Delete step"
-                                className="min-h-[34px] min-w-[34px] rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-400"
+                                className="min-h-[32px] min-w-[32px] rounded-lg hover:bg-[#222630] flex items-center justify-center text-[#6B7280] hover:text-[#F3F4F6]"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -373,13 +371,13 @@ export function AssignmentsView({
                       setNewStepText((prev) => ({ ...prev, [assignment.id]: e.target.value }))
                     }
                     placeholder="Add another small step..."
-                    className="flex-1 min-h-[40px] rounded-xl bg-white/[0.05] border border-white/10 px-3.5 text-sm text-slate-100"
+                    className="flex-1 min-h-[38px] rounded-xl bg-[#14171D] border border-[#262B36] px-3.5 text-sm text-[#F3F4F6] placeholder:text-[#6B7280] focus:outline-none focus:border-[#D6A04A]"
                   />
                   <button
                     type="submit"
-                    className="min-h-[40px] rounded-xl bg-white/10 hover:bg-white/15 px-3.5 text-xs font-extrabold text-slate-100 flex items-center gap-1"
+                    className="min-h-[38px] rounded-xl bg-[#222630] hover:bg-[#2A2F3B] border border-[#2E3442] px-3.5 text-xs font-medium text-[#F3F4F6] flex items-center gap-1"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 text-[#D6A04A]" />
                     <span>Add Step</span>
                   </button>
                 </form>

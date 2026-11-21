@@ -6,10 +6,9 @@ import {
   CalendarDays,
   Compass,
   BarChart3,
-  ShieldCheck,
-  Sparkles,
+  Settings,
+  MessageSquare,
 } from 'lucide-react';
-import { getWeatherAccent } from './CircularRing';
 
 interface NavShellProps {
   activeSection: AppSection;
@@ -30,44 +29,43 @@ const NAV_ITEMS: Array<{
   { id: 'assignments', label: 'Assignments', shortLabel: 'Work', icon: BookOpen },
   { id: 'planner', label: 'Planner', shortLabel: 'Plan', icon: CalendarDays },
   { id: 'opportunities', label: 'Opportunities', shortLabel: 'Opps', icon: Compass },
-  { id: 'insights', label: 'Insights', shortLabel: 'Stats', icon: BarChart3 },
-  { id: 'privacy', label: 'Privacy', shortLabel: 'Privacy', icon: ShieldCheck },
+  { id: 'insights', label: 'Insights', shortLabel: 'Insights', icon: BarChart3 },
+  { id: 'privacy', label: 'Settings', shortLabel: 'Settings', icon: Settings },
 ];
 
 export function NavShell({
   activeSection,
   onSelectSection,
-  weather,
+  weather: _weather,
   onOpenAssistant,
   missedCount,
 }: NavShellProps) {
-  const accent = getWeatherAccent(weather);
-
   return (
     <>
       {/* Desktop Left Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 z-30 border-r border-white/10 bg-[#070a1e]/85 backdrop-blur-2xl px-4 py-6">
+      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:fixed lg:inset-y-0 lg:left-0 z-30 border-r border-[#242934] bg-[#14161C] px-3 py-5">
         <button
           type="button"
           onClick={() => onSelectSection('today')}
-          className="flex items-center gap-3 px-3 py-2 rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left hover:bg-[#1A1D24] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A04A]/60"
         >
           <span
             aria-hidden="true"
-            className={`w-3.5 h-3.5 rounded-full ${accent.ringDot}`}
-            style={{ boxShadow: `0 0 14px ${accent.glow}` }}
-          />
-          <div>
-            <div className="text-xl font-extrabold tracking-tight text-slate-50 leading-none">
+            className="w-7 h-7 rounded-lg bg-[#1F232C] border border-[#2D3340] flex items-center justify-center shrink-0"
+          >
+            <span className="w-2.5 h-2.5 rounded-full border-2 border-[#D6A04A]" />
+          </span>
+          <div className="min-w-0">
+            <div className="text-[15px] font-semibold tracking-tight text-[#F3F4F6] leading-tight">
               Orbit
             </div>
-            <div className="text-[11px] font-semibold text-slate-400 mt-1">
-              Gentle Student Copilot
+            <div className="text-[11px] font-normal text-[#8B93A1] truncate">
+              Student workspace
             </div>
           </div>
         </button>
 
-        <nav aria-label="Main sections" className="mt-7 flex-1 space-y-1.5">
+        <nav aria-label="Main sections" className="mt-6 flex-1 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = activeSection === item.id;
@@ -77,18 +75,22 @@ export function NavShell({
                 type="button"
                 onClick={() => onSelectSection(item.id)}
                 aria-current={active ? 'page' : undefined}
-                className={`w-full min-h-[44px] flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                className={`w-full min-h-[40px] flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A04A]/60 ${
                   active
-                    ? `${accent.softBg} ${accent.text} border ${accent.border}`
-                    : 'text-slate-300 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                    ? 'bg-[#1F232C] text-[#F3F4F6] border border-[#2F3544]'
+                    : 'text-[#9CA3AF] hover:text-[#F3F4F6] hover:bg-[#1A1D24] border border-transparent'
                 }`}
               >
-                <span className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${
+                      active ? 'text-[#D6A04A]' : 'text-[#7A8291]'
+                    }`}
+                  />
+                  <span className="truncate whitespace-nowrap">{item.label}</span>
                 </span>
                 {item.id === 'today' && missedCount > 0 && (
-                  <span className="text-xs font-extrabold text-violet-200 font-mono-tabular">
+                  <span className="text-[11px] font-medium text-[#D6A04A] font-mono-tabular">
                     {missedCount}
                   </span>
                 )}
@@ -97,39 +99,40 @@ export function NavShell({
           })}
         </nav>
 
-        <div className="pt-4 border-t border-white/10">
+        <div className="pt-3 border-t border-[#242934]">
           <button
             type="button"
             onClick={onOpenAssistant}
-            className="w-full min-h-[48px] rounded-2xl bg-amber-400/90 hover:bg-amber-300 text-slate-950 font-extrabold text-sm px-4 py-2.5 flex items-center justify-center gap-2 transition-colors shadow-lg shadow-amber-500/10"
+            className="w-full min-h-[40px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-[13px] px-3 py-2 flex items-center justify-center gap-2 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A04A]"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Ask Orbit Assistant</span>
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span>Ask Assistant</span>
           </button>
         </div>
       </aside>
 
       {/* Mobile Top Header */}
-      <header className="lg:hidden sticky top-0 z-30 border-b border-white/10 bg-[#06081a]/85 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between">
+      <header className="lg:hidden sticky top-0 z-30 border-b border-[#242934] bg-[#14161C]/95 backdrop-blur-md px-4 py-2.5 flex items-center justify-between">
         <button
           type="button"
           onClick={() => onSelectSection('today')}
-          className="inline-flex items-center gap-2.5 min-h-[44px] px-1 rounded-xl"
+          className="inline-flex items-center gap-2.5 min-h-[40px] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A04A]/60"
         >
           <span
             aria-hidden="true"
-            className={`w-3 h-3 rounded-full ${accent.ringDot}`}
-            style={{ boxShadow: `0 0 12px ${accent.glow}` }}
-          />
-          <span className="text-lg font-extrabold tracking-tight text-slate-50">Orbit</span>
+            className="w-6 h-6 rounded-lg bg-[#1F232C] border border-[#2D3340] flex items-center justify-center"
+          >
+            <span className="w-2 h-2 rounded-full border-2 border-[#D6A04A]" />
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-[#F3F4F6]">Orbit</span>
         </button>
 
         <button
           type="button"
           onClick={onOpenAssistant}
-          className="min-h-[40px] rounded-2xl bg-amber-400/90 hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3.5 py-2 flex items-center gap-1.5 transition-colors"
+          className="min-h-[38px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-xs px-3.5 py-2 flex items-center gap-1.5 transition-colors whitespace-nowrap"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <MessageSquare className="w-3.5 h-3.5" />
           <span>Assistant</span>
         </button>
       </header>
@@ -137,7 +140,7 @@ export function NavShell({
       {/* Mobile Bottom Navigation */}
       <nav
         aria-label="Mobile sections"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-white/12 bg-[#070b22]/92 backdrop-blur-2xl pb-safe"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#242934] bg-[#14161C]/95 backdrop-blur-md pb-safe"
       >
         <div className="grid grid-cols-7 max-w-xl mx-auto px-1 py-1">
           {NAV_ITEMS.map((item) => {
@@ -149,12 +152,12 @@ export function NavShell({
                 type="button"
                 onClick={() => onSelectSection(item.id)}
                 aria-current={active ? 'page' : undefined}
-                className={`min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 transition-colors ${
-                  active ? accent.text : 'text-slate-400 hover:text-slate-200'
+                className={`min-h-[46px] flex flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 transition-colors ${
+                  active ? 'text-[#D6A04A]' : 'text-[#9CA3AF] hover:text-[#F3F4F6]'
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                <span className="text-[10px] font-bold leading-tight truncate max-w-full">
+                <span className="text-[10px] font-medium leading-tight truncate max-w-full">
                   {item.shortLabel}
                 </span>
               </button>

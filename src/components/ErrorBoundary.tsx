@@ -23,13 +23,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-dvh flex items-center justify-center px-4 bg-[#040511] text-slate-100">
-          <div className="max-w-md w-full aurora-glass-card rounded-[28px] p-7 text-center">
-            <h2 className="text-xl font-extrabold text-slate-50">
+        <div className="min-h-dvh flex items-center justify-center px-4 bg-[#111318] text-[#F3F4F6]">
+          <div className="max-w-md w-full bg-[#1A1D24] border border-[#262B36] rounded-2xl p-6 text-center">
+            <h2 className="text-lg font-semibold text-[#F3F4F6]">
               Orbit hit a quick pause
             </h2>
-            <p className="mt-2 text-sm text-slate-300 leading-relaxed">
-              Nothing in your local data was lost. Tap below to reload the view cleanly.
+            <p className="mt-2 text-sm text-[#9CA3AF] leading-relaxed">
+              Nothing in your local data was lost. Click below to reload the workspace cleanly.
             </p>
             <button
               type="button"
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 this.setState({ hasError: false });
                 this.props.onReset?.();
               }}
-              className="mt-5 min-h-[48px] rounded-2xl bg-violet-400 text-slate-950 font-extrabold px-6 py-2.5 text-sm hover:bg-violet-300 transition-colors"
+              className="mt-5 min-h-[42px] rounded-xl bg-[#D6A04A] text-[#111318] font-semibold px-5 py-2 text-sm hover:bg-[#E0AD5B] transition-colors"
             >
               Return to Orbit
             </button>

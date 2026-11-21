@@ -5,7 +5,7 @@ import {
   Mic,
   MicOff,
   Plus,
-  Sparkles,
+  MessageSquare,
   Check,
   FileText,
 } from 'lucide-react';
@@ -99,7 +99,12 @@ export function AssistantDrawer({
     setFileName('');
     setFileBase64(undefined);
     setMimeType(undefined);
-    await onSendMessage({ message: msg || undefined, fileBase64: b64, mimeType: mt, fileName: fn || undefined });
+    await onSendMessage({
+      message: msg || undefined,
+      fileBase64: b64,
+      mimeType: mt,
+      fileName: fn || undefined,
+    });
   };
 
   return (
@@ -107,17 +112,17 @@ export function AssistantDrawer({
       role="dialog"
       aria-modal="true"
       aria-label="Orbit Personal Assistant"
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex justify-end"
+      className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex justify-end"
     >
-      <div className="w-full max-w-lg h-full bg-[#080d24] border-l border-white/15 flex flex-col">
+      <div className="w-full max-w-lg h-full bg-[#14161C] border-l border-[#262B36] flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#242934] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-5 h-5 text-amber-300" />
+            <MessageSquare className="w-4 h-4 text-[#D6A04A]" />
             <div>
-              <h2 className="text-base font-extrabold text-slate-50">Orbit Assistant</h2>
-              <p className="text-xs text-slate-400">
-                Knows your goals, assignments, deadlines &amp; asks before major edits
+              <h2 className="text-sm font-semibold text-[#F3F4F6]">Orbit Assistant</h2>
+              <p className="text-xs text-[#9CA3AF]">
+                Knows your goals, work, and asks before making edits
               </p>
             </div>
           </div>
@@ -125,17 +130,17 @@ export function AssistantDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close assistant"
-            className="min-h-[40px] min-w-[40px] rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-200"
+            className="min-h-[36px] min-w-[36px] rounded-xl hover:bg-[#1F232C] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {messages.length === 0 && (
-            <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4 space-y-2.5">
-              <p className="text-sm font-bold text-slate-100">
+            <div className="rounded-xl bg-[#1A1D24] border border-[#262B36] p-4 space-y-2.5">
+              <p className="text-sm font-medium text-[#F3F4F6]">
                 Try speaking or typing naturally:
               </p>
               <div className="flex flex-wrap gap-2">
@@ -149,7 +154,7 @@ export function AssistantDrawer({
                     key={prompt}
                     type="button"
                     onClick={() => setInput(prompt)}
-                    className="rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 px-3 py-1.5 text-xs text-slate-200 text-left"
+                    className="rounded-xl bg-[#14171D] hover:bg-[#222630] border border-[#262B36] px-3 py-1.5 text-xs text-[#D1D5DB] text-left transition-colors"
                   >
                     &ldquo;{prompt}&rdquo;
                   </button>
@@ -166,12 +171,12 @@ export function AssistantDrawer({
               <div
                 className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   m.role === 'user'
-                    ? 'bg-amber-400/20 border border-amber-300/30 text-slate-50'
-                    : 'bg-white/[0.06] border border-white/10 text-slate-100'
+                    ? 'bg-[#D6A04A]/15 border border-[#D6A04A]/35 text-[#F3F4F6]'
+                    : 'bg-[#1A1D24] border border-[#262B36] text-[#F3F4F6]'
                 }`}
               >
                 {m.hasAttachment && (
-                  <div className="text-[11px] font-bold text-amber-200 mb-1 flex items-center gap-1">
+                  <div className="text-[11px] font-medium text-[#D6A04A] mb-1 flex items-center gap-1">
                     <FileText className="w-3 h-3" />
                     <span>{m.attachmentName || 'Attached file'}</span>
                   </div>
@@ -179,15 +184,15 @@ export function AssistantDrawer({
                 <p>{m.text}</p>
 
                 {m.pendingConfirmation && !m.confirmationResolved && (
-                  <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
-                    <div className="text-xs font-extrabold text-amber-300">
+                  <div className="mt-3 pt-3 border-t border-[#262B36] space-y-2">
+                    <div className="text-xs font-medium text-[#D6A04A]">
                       Confirm change: {m.pendingConfirmation.confirmationSummary}
                     </div>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => onConfirmProposal(m.id, m.pendingConfirmation!)}
-                        className="min-h-[36px] rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold text-xs px-3.5 inline-flex items-center gap-1"
+                        className="min-h-[34px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] font-semibold text-xs px-3.5 inline-flex items-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" />
                         <span>Apply Change</span>
@@ -195,7 +200,7 @@ export function AssistantDrawer({
                       <button
                         type="button"
                         onClick={() => onCancelProposal(m.id)}
-                        className="min-h-[36px] rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 font-bold text-xs px-3.5"
+                        className="min-h-[34px] rounded-xl bg-[#222630] hover:bg-[#2A2F3B] text-[#E5E7EB] font-medium text-xs px-3.5"
                       >
                         Keep as-is
                       </button>
@@ -204,7 +209,7 @@ export function AssistantDrawer({
                 )}
 
                 {m.confirmationResolved && (
-                  <div className="mt-2 text-[11px] font-bold text-teal-300">
+                  <div className="mt-2 text-[11px] font-medium text-teal-300">
                     {m.confirmationResolved === 'confirmed'
                       ? 'Applied to your Orbit schedule.'
                       : 'Left your schedule unchanged.'}
@@ -214,15 +219,13 @@ export function AssistantDrawer({
             </div>
           ))}
 
-          {loading && (
-            <div className="text-xs text-slate-400">Orbit is thinking...</div>
-          )}
+          {loading && <div className="text-xs text-[#9CA3AF]">Orbit is thinking...</div>}
         </div>
 
         {/* Input Bar */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-white/10 space-y-2">
+        <form onSubmit={handleSubmit} className="p-4 border-t border-[#242934] space-y-2">
           {fileName && (
-            <div className="text-xs text-teal-200 flex items-center justify-between bg-white/[0.05] rounded-xl px-3 py-1.5">
+            <div className="text-xs text-teal-300 flex items-center justify-between bg-[#1A1D24] border border-[#262B36] rounded-xl px-3 py-1.5">
               <span>Attached: {fileName}</span>
               <button
                 type="button"
@@ -231,7 +234,7 @@ export function AssistantDrawer({
                   setFileBase64(undefined);
                   setMimeType(undefined);
                 }}
-                className="text-slate-400 hover:text-white"
+                className="text-[#9CA3AF] hover:text-[#F3F4F6]"
               >
                 Remove
               </button>
@@ -241,9 +244,9 @@ export function AssistantDrawer({
           <div className="flex items-center gap-2">
             <label
               title="Attach image or PDF"
-              className="min-h-[44px] min-w-[44px] rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/12 flex items-center justify-center text-slate-200 cursor-pointer shrink-0"
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-[#1A1D24] hover:bg-[#222630] border border-[#262B36] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6] cursor-pointer shrink-0"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               <input
                 type="file"
                 accept="image/*,.pdf,application/pdf"
@@ -257,10 +260,10 @@ export function AssistantDrawer({
                 type="button"
                 onClick={toggleMic}
                 aria-label={listening ? 'Stop voice input' : 'Start voice input'}
-                className={`min-h-[44px] min-w-[44px] rounded-2xl border flex items-center justify-center shrink-0 transition-colors ${
+                className={`min-h-[40px] min-w-[40px] rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
                   listening
-                    ? 'bg-amber-400 text-slate-950 border-amber-300'
-                    : 'bg-white/[0.07] hover:bg-white/[0.14] border-white/12 text-slate-200'
+                    ? 'bg-[#D6A04A] text-[#111318] border-[#D6A04A]'
+                    : 'bg-[#1A1D24] hover:bg-[#222630] border-[#262B36] text-[#9CA3AF] hover:text-[#F3F4F6]'
                 }`}
               >
                 {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -272,14 +275,14 @@ export function AssistantDrawer({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask Orbit or tell me what changed..."
-              className="flex-1 min-h-[44px] rounded-2xl bg-white/[0.06] border border-white/12 px-4 text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-amber-300/50"
+              className="flex-1 min-h-[40px] rounded-xl bg-[#1A1D24] border border-[#262B36] px-3.5 text-sm text-[#F3F4F6] placeholder:text-[#6B7280] focus:outline-none focus:border-[#D6A04A]"
             />
 
             <button
               type="submit"
               disabled={loading || (!input.trim() && !fileBase64)}
               aria-label="Send message"
-              className="min-h-[44px] min-w-[44px] rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 flex items-center justify-center shrink-0 disabled:opacity-50"
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-[#D6A04A] hover:bg-[#E0AD5B] text-[#111318] flex items-center justify-center shrink-0 disabled:opacity-50 transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
