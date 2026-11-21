@@ -2,7 +2,7 @@
 
 > **"Other apps punish you when you fall behind. Orbit makes the restart small."**
 
-Orbit is an AI executive-function personal assistant designed for neurodivergent students. Built with a calm cosmos interface, Orbit replaces red overdue warnings, broken streaks, and cluttered lists with a clear 7-section workspace, a 2-minute starter ring, and a context-aware AI assistant.
+Orbit is an AI executive-function personal assistant designed for neurodivergent students, Orbit replaces red overdue warnings, broken streaks, and cluttered lists with a clear 7-section workspace, a 2-minute starter ring, and a context-aware AI assistant.
 
 ---
 
